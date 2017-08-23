@@ -9,6 +9,8 @@
   "author": "Narazaka",
   "license": "MIT",
   "dependencies": {
-    "koa": "^2.3.0"
+    "ioredis": "^3.1.4",
+    "koa": "^2.3.0",
+    "koa-router": "^7.2.1"
   }
 }
