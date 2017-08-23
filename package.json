@@ -1,0 +1,11 @@
+{
+  "name": "shuffle-lunch",
+  "version": "1.0.0",
+  "description": "shuffle lunch",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Narazaka",
+  "license": "MIT"
+}
