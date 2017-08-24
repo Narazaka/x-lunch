@@ -90,18 +90,28 @@ class Lunch {
    * @return {Promise<string[]>}
    */
   async members() {
-    return await redis.lrange(this.membersKey, 0, -1);
+    return (await redis.smembers(this.membersKey) || []).sort();
   }
 
   /**
-   * ランチのくくりに属するメンバー名セット
+   * ランチのくくりに属するメンバー名追加
    * @param {string[]} names
    */
-  async setMembers(names) {
+  async addMembers(names) {
     const membersKey = this.membersKey;
     const pipeline = redis.multi();
-    pipeline.del(membersKey);
-    for (const name of names) pipeline.rpush(membersKey, name);
+    for (const name of names) pipeline.sadd(membersKey, name);
+    await pipeline.exec();
+  }
+  
+  /**
+   * ランチのくくりに属するメンバー名削除
+   * @param {string[]} names
+   */
+  async removeMembers(names) {
+    const membersKey = this.membersKey;
+    const pipeline = redis.multi();
+    for (const name of names) pipeline.srem(membersKey, name);
     await pipeline.exec();
   }
   
@@ -178,6 +188,7 @@ class LunchWithDate {
       const groupMembersKey = this.groupMembersKey(groupId);
       pipeline.del(groupMembersKey);
       const membersOfGroup = membersOfGroups[groupId];
+      if (!membersOfGroup) continue;
       for (const name of membersOfGroup) pipeline.sadd(groupMembersKey, name);
     }
     // 保存実行
@@ -213,6 +224,23 @@ class LunchWithDate {
   }
 
   /**
+   * グループ分け他の情報
+   * @return {{membersOfGroups: Array<string[]>, currentDate: string, groupCount: number>}}
+   */
+  async membersOfGroupsAndOtherInfo() {
+    const pipeline = redis.multi();
+    for (let groupId = 0; groupId < GROUP_COUNT_MAX; ++groupId) {
+      pipeline.smembers(this.groupMembersKey(groupId));
+    }
+    pipeline.get(this.lunch.currentDateKey);
+    pipeline.get(this.lunch.groupCountKey);
+    const membersOfGroups = (await pipeline.exec()).map(item => item[1]);
+    const groupCount = Number(membersOfGroups.pop() || 0);
+    const currentDate = membersOfGroups.pop();
+    return { membersOfGroups, currentDate, groupCount };
+  }
+
+  /**
    * グループ分け
    * 全部空の場合は当該日付のものがない
    */
@@ -222,8 +250,8 @@ class LunchWithDate {
       pipeline.smembers(this.groupMembersKey(groupId));
     }
     /** @type {Array<string[] | undefined>} */
-    const membersOfGroups = await pipeline.exec();
-    return membersOfGroups; // undefinedもあるのでとりあえず10件全部返す
+    const membersOfGroups = (await pipeline.exec()).map(item => item[1]);
+    return membersOfGroups; // とりあえず10件全部返す
   }
 
   /**
