@@ -17,7 +17,7 @@ class Lunch {
    */
   static async idAndNames() {
     const lunchNames = await redis.hgetall(this.nameKey());
-    return Object.keys(lunchNames || {}).sort().
+    return Object.keys(lunchNames || {}).sort((a, b) => a - b).
       map((id) => ({id: Number(id), name: lunchNames[id]}));
   }
 
