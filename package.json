@@ -9,11 +9,13 @@
   "author": "Narazaka",
   "license": "MIT",
   "dependencies": {
+    "ioredis": "^3.1.4",
     "koa": "^2.3.0",
+    "koa-handle-error": "^0.0.5",
     "koa-helmet": "^3.2.0",
     "koa-router": "^7.2.1",
+    "koa-socket-2": "^1.0.13",
     "koa-views": "^6.0.2",
-    "pug": "^2.0.0-rc.3",
-    "rebridge": "^2.3.0"
+    "pug": "^2.0.0-rc.3"
   }
 }
