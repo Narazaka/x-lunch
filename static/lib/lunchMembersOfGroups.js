@@ -17,7 +17,16 @@ window.addEventListener("DOMContentLoaded", () => {
     const groupCountNode = document.getElementById("groupCount");
     const date = dateNode.value || state.currentDate;
     const groupCount = groupCountNode.value || state.groupCount || 1;
-    const inactiveMembers = [];
+    // 欠席者抽出
+    const inactiveMembersHash = {}
+    for (const name of Object.keys(state.inactiveMembers || {}).concat(Object.keys(state.additionalInactiveMembers || {}))) {
+      inactiveMembersHash[name] = true;
+    }
+    for (const name of Object.keys(state.additionalActiveMembers || {})) {
+      delete inactiveMembersHash[name];
+    }
+    const inactiveMembers = Object.keys(inactiveMembersHash);
+    state.additionalInactiveMembers = undefined;
     state.shuffleMode = false;
     render();
     socket.emit("shuffle", { date, groupCount, inactiveMembers });

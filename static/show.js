@@ -46,14 +46,14 @@ function renderNormalMode() {
           h("ul", membersOfGroup.map(name =>
             h("li", [
               h("span", name),
-              state.inactiveMembers[name] ? h("span", "[欠席]"): "",
+              (state.inactiveMembers || {})[name] ? h("span", "[欠席]"): "",
               {
                 default: "",
                 from: h("button", { on: { click: () => setMoveGroupMember(name) }}, "ここから"),
                 to: state.moveGroupMember === name ? h("span", "ここから") : "",
               }[state.moveGroupMemberMode || "default"],
               state.editInactive ? (
-                state.inactiveMembers[name] ?
+                (state.inactiveMembers || {})[name] ?
                   h("button", { on: { click: () => handler.setActive(name) }}, "出席する") :
                   h("button", { on: { click: () => handler.setInactive(name) }}, "欠席する")
               ) : "",
@@ -118,7 +118,59 @@ function renderShuffleMode() {
     h("input", { attrs: { id: "date" }}),
     h("p", `前回: ${state.groupCount || 0} →変更する`),
     h("input", { attrs: { id: "groupCount", type: "number" }}),
-    // inactiveMembers
+    h("p", "あらかじめ欠席者を追加する"),
+    h("ul",
+      (state.members || []).map(name =>
+        h("li", [
+          h("span", name),
+          h("div",
+            (state.inactiveMembers || {})[name] ?
+              (
+                (state.additionalActiveMembers || {})[name] ?
+                  [
+                    h("span", "欠席→出席"),
+                    h("button", { on: { click: () => toggleAdditionalActiveMember(name) } }, "欠席にする"),
+                  ] :
+                  [
+                    h("span", "欠席"),
+                    h("button", { on: { click: () => toggleAdditionalActiveMember(name) } }, "出席にする"),
+                  ]
+              ) :
+              (
+                (state.additionalInactiveMembers || {})[name] ?
+                  [
+                    h("span", "出席→欠席"),
+                    h("button", { on: { click: () => toggleAdditionalInactiveMember(name) } }, "出席にする"),
+                  ] :
+                  [
+                    h("span", "出席"),
+                    h("button", { on: { click: () => toggleAdditionalInactiveMember(name) } }, "欠席にする"),
+                  ]
+              )
+          )
+        ])
+      )
+    ),
     h("p", [h("button", { on: { click: handler.shuffle } }, "シャッフルする")]),
   ]);
+}
+
+function toggleAdditionalActiveMember(name) {
+  if (!state.additionalActiveMembers) state.additionalActiveMembers = {};
+  if (state.additionalActiveMembers[name]) {
+    delete state.additionalActiveMembers[name];
+  } else {
+    state.additionalActiveMembers[name] = true;
+  }
+  render();
+}
+
+function toggleAdditionalInactiveMember(name) {
+  if (!state.additionalInactiveMembers) state.additionalInactiveMembers = {};
+  if (state.additionalInactiveMembers[name]) {
+    delete state.additionalInactiveMembers[name];
+  } else {
+    state.additionalInactiveMembers[name] = true;
+  }
+  render();
 }
