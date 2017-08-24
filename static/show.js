@@ -35,6 +35,7 @@ function renderNormalMode() {
     h("h2", "グループ分け"),
     state.currentDate ? h("p", `日付: ${state.currentDate}`) : "",
     h("button", { on: { click: toggleStartMoveGroupMemberMode }}, "メンバー移動"),
+    h("button", { on: { click: toggleEditInactive }}, "出欠変更"),
     h("div", (state.membersOfGroups || []).map((membersOfGroup, groupId) =>
       h("dl", [
         h("dt", [
@@ -45,11 +46,17 @@ function renderNormalMode() {
           h("ul", membersOfGroup.map(name =>
             h("li", [
               h("span", name),
+              state.inactiveMembers[name] ? h("span", "[欠席]"): "",
               {
                 default: "",
                 from: h("button", { on: { click: () => setMoveGroupMember(name) }}, "ここから"),
                 to: state.moveGroupMember === name ? h("span", "ここから") : "",
               }[state.moveGroupMemberMode || "default"],
+              state.editInactive ? (
+                state.inactiveMembers[name] ?
+                  h("button", { on: { click: () => handler.setActive(name) }}, "出席する") :
+                  h("button", { on: { click: () => handler.setInactive(name) }}, "欠席する")
+              ) : "",
             ])
           ).concat([
             h("li", [
@@ -94,6 +101,11 @@ function toggleStartMoveGroupMemberMode() {
 function setMoveGroupMember(name) {
   state.moveGroupMember = name;
   state.moveGroupMemberMode = "to";
+  render();
+}
+
+function toggleEditInactive() {
+  state.editInactive = !state.editInactive;
   render();
 }
 
