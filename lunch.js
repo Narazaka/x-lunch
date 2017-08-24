@@ -7,12 +7,16 @@ const GROUP_COUNT_MAX = 10;
 
 /** ランチのくくり */
 class Lunch {
+  static maxIdKey() { return "lunch_max_id"; }
+
+  static nameKey() { return "lunch_names"; }
+
   /**
    * ランチくくり群のidとnameの組配列(idソート済み)
    * @return {Promise<{id: number, name: string}[]>}
    */
   static async idAndNames() {
-    const lunchNames = await redis.hgetall("lunchNames");
+    const lunchNames = await redis.hgetall(this.nameKey());
     return Object.keys(lunchNames || {}).sort().
       map((id) => ({id: Number(id), name: lunchNames[id]}));
   }
@@ -24,8 +28,8 @@ class Lunch {
   static async add(name) {
     let id;
     do { // idがかぶらなくなるまでmax_idをインクリメントして試行する
-      id = await redis.incr("lunch_max_id");
-    } while(!Number(await redis.hsetnx("lunch_names", id, name)));
+      id = await redis.incr(this.maxIdKey());
+    } while(!Number(await redis.hsetnx(this.nameKey(), id, name)));
     return this.get(Number(id));
   }
 
@@ -53,14 +57,12 @@ class Lunch {
     return new LunchWithDate(this, date);
   }
 
-  get nameKey() { return "lunch_names"; }
-
   /**
    * ランチのくくり名
    * @return {Promise<string>}
    */
   async name() {
-    return await redis.hget(this.nameKey, this.id);
+    return await redis.hget(this.constructor.nameKey(), this.id);
   }
 
   /**
@@ -68,7 +70,7 @@ class Lunch {
    * @param {string} name
    */
   async setName(name) {
-    await redis.hset(this.nameKey, this.id, name);
+    await redis.hset(this.constructor.nameKey(), this.id, name);
   }
 
   get currentDateKey() { return `lunch_current_date:${this.id}`; }
