@@ -26,11 +26,27 @@ window.addEventListener("DOMContentLoaded", () => {
     socket.emit("shuffle", { date, groupCount, inactiveMembers });
   };
   
-  handler.addGroupMember = function(groupId, name) {
+  handler.addGroupMember = function(groupId) {
+    const node = document.getElementById(`addGroupMember-${groupId}`);
+    const name = node.value;
+    if (!name) return;
+    node.value = "";
+    state.showAddGroupMember = false;
+    render();
     socket.emit("add", { date: state.currentDate, groupId, name });
   };
   
-  handler.moveGroupMember = function(fromGroupId, toGroupId, name) {
+  handler.moveGroupMember = function(toGroupId) {
+    const name = state.moveGroupMember;
+    let fromGroupId;
+    for (let groupId = 0; groupId < (state.membersOfGroups || []).length; ++groupId) {
+      if (state.membersOfGroups[groupId].indexOf(name) !== -1) {
+        fromGroupId = groupId;
+        break;
+      }
+    }
+    if (fromGroupId == null) return;
+    state.moveGroupMemberMode = undefined;
     socket.emit("move", { date: state.currentDate, fromGroupId, toGroupId, name });
   };
 });

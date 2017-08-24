@@ -34,15 +34,32 @@ function renderNormalMode() {
     ]) : "",
     h("h2", "グループ分け"),
     state.currentDate ? h("p", `日付: ${state.currentDate}`) : "",
-    h("div", (state.membersOfGroups || []).map((membersOfGroup, index) =>
+    h("button", { on: { click: toggleStartMoveGroupMemberMode }}, "メンバー移動"),
+    h("div", (state.membersOfGroups || []).map((membersOfGroup, groupId) =>
       h("dl", [
-        h("dt", `グループ${index + 1}`),
+        h("dt", [
+          h("p", `グループ${groupId + 1}`),
+          state.moveGroupMemberMode === "to" ? h("button", { on: { click: () => handler.moveGroupMember(groupId) }}, "ここへ") : "",
+        ]),
         h("dd", [
           h("ul", membersOfGroup.map(name =>
             h("li", [
               h("span", name),
+              {
+                default: "",
+                from: h("button", { on: { click: () => setMoveGroupMember(name) }}, "ここから"),
+                to: state.moveGroupMember === name ? h("span", "ここから") : "",
+              }[state.moveGroupMemberMode || "default"],
             ])
-          ))
+          ).concat([
+            h("li", [
+              h("button", { on: { click: toggleAddGroupMember }}, "+"),
+              state.showAddGroupMember ? h("div", [
+                h("input", { attrs: { id: `addGroupMember-${groupId}` }}),
+                h("button", { on: { click: () => handler.addGroupMember(groupId) }}, "追加"),
+              ]) : "",
+            ])
+          ]))
         ])
       ])
     )),
@@ -61,6 +78,22 @@ function toggleAddMembers() {
 
 function toggleRemoveMembers() {
   state.showRemoveMembers = !state.showRemoveMembers;
+  render();
+}
+
+function toggleAddGroupMember() {
+  state.showAddGroupMember = !state.showAddGroupMember;
+  render();
+}
+
+function toggleStartMoveGroupMemberMode() {
+  state.moveGroupMemberMode = state.moveGroupMemberMode ? undefined : "from";
+  render();
+}
+
+function setMoveGroupMember(name) {
+  state.moveGroupMember = name;
+  state.moveGroupMemberMode = "to";
   render();
 }
 
