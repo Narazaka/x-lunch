@@ -45,6 +45,14 @@ class Lunch {
     this.id = id;
   }
 
+  /**
+   * 現在日付のグループ分け関連を取得
+   * @param {string} date yyyy-mm-dd 
+   */
+  date(date) {
+    return new LunchWithDate(this, date);
+  }
+
   get nameKey() { return "lunch_names"; }
 
   /**
@@ -112,49 +120,60 @@ class Lunch {
   async groupCount() {
     return Number(await redis.get(this.groupCountKey));
   }
+}
 
+/** ランチのくくりの現在日付のグループ分け関連 */
+class LunchWithDate {
   /**
-   * 非アクティブメンバーリストRedisキー
+   * 
+   * @param {Lunch} lunch 
    * @param {string} date yyyy-mm-dd
    */
-  inactiveMembersKey(date) { return `lunch_inactive_members:${this.id}:${date}`; }
+  constructor(lunch, date) {
+    /** @type {Lunch} */
+    this.lunch = lunch;
+    /** @type {string} */
+    this.date = date;
+  }
+
+  get id() { return this.lunch.id; }
+
+  get inactiveMembersKey() { return `lunch_inactive_members:${this.id}:${this.date}`; }
 
   /**
    * 非アクティブメンバーリスト
-   * @param {string} date yyyy-mm-dd
    * @return {string[]}
    */
-  async inactiveMembers(date) {
-    return await redis.smembers(this.inactiveMembersKey(date));
+  async inactiveMembers() {
+    return await redis.smembers(this.inactiveMembersKey);
   }
 
   /**
    * グループgroupIdのメンバー名Redisキー
-   * @param {string} date yyyy-mm-dd
    * @param {number} groupId
    */
-  groupMembersKey(date, groupId) { return `lunch_group_members:${this.id}:${date}:${groupId}`; }
+  groupMembersKey(groupId) { return `lunch_group_members:${this.id}:${this.date}:${groupId}`; }
 
   /**
    * シャッフルしたグループ分けを現在のグループ分けとしてセットする
-   * @param {string} date yyyy-mm-dd
    * @param {number} groupCount 作るグループ数
    * @param {string[]} inactiveMembers 除外するメンバー
    */
-  async shuffleGroups(date, groupCount, inactiveMembers = []) {
+  async shuffleGroups(groupCount, inactiveMembers = []) {
     const membersOfGroups = await this.getShuffledMembersOfGroups(groupCount, inactiveMembers);
 
     const pipeline = redis.multi();
     // 現在日付をセット
-    pipeline.set(this.currentDateKey, date);
+    pipeline.set(this.lunch.currentDateKey, this.date);
     // 次回シャッフル用のグループ数デフォルト値を記録
-    pipeline.set(this.groupCountKey, groupCount);
+    pipeline.set(this.lunch.groupCountKey, groupCount);
     // 非アクティブ状態を消去&追加
-    pipeline.del(this.inactiveMembersKey(date));
-    for (const name of inactiveMembers) pipeline.sadd(this.inactiveMembersKey(date), name);
+    const inactiveMembersKey = this.inactiveMembersKey;
+    pipeline.del(inactiveMembersKey);
+    for (const name of inactiveMembers) pipeline.sadd(inactiveMembersKey, name);
     // グループ分けを消去&追加
     for (let groupId = 0; groupId < GROUP_COUNT_MAX; ++groupId) {
-      const groupMembersKey = this.groupMembersKey(date, groupId);
+      const groupMembersKey = this.groupMembersKey(groupId);
       pipeline.del(groupMembersKey);
       const membersOfGroup = membersOfGroups[groupId];
       for (const name of membersOfGroup) pipeline.sadd(groupMembersKey, name);
@@ -169,7 +188,7 @@ class Lunch {
    * @param {string[]} inactiveMembers 
    */
   async getShuffledMembersOfGroups(groupCount, inactiveMembers = []) {
-    const activeMembers = await this.membersWithout(inactiveMembers);
+    const activeMembers = await this.lunch.membersWithout(inactiveMembers);
     // メンバーの配列をシャッフル (Fisher–Yates)
     for (let i = activeMembers.length - 1; i > 0; --i) {
       var r = Math.floor(Math.random() * (i + 1));
@@ -192,14 +211,13 @@ class Lunch {
   }
 
   /**
-   * 現在のグループ分け
-   * 全部空の場合は取得失敗(当該日付のものがない)なのでリトライ必要
+   * グループ分け
+   * 全部空の場合は当該日付のものがない
    */
   async membersOfGroups() {
-    const date = await this.currentDate();
     const pipeline = redis.multi();
     for (let groupId = 0; groupId < GROUP_COUNT_MAX; ++groupId) {
-      pipeline.smembers(this.groupMembersKey(date, groupId));
+      pipeline.smembers(this.groupMembersKey(groupId));
     }
     /** @type {Array<string[] | undefined>} */
     const membersOfGroups = await pipeline.exec();
@@ -208,41 +226,37 @@ class Lunch {
 
   /**
    * 現在のグループ分けにメンバーを追加する
-   * @param {string} date yyyy-mm-dd
    * @param {number} groupId
    * @param {string} name
    */
-  async addGroupMember(date, groupId, name) {
-    await redis.sadd(this.groupMembersKey(date, groupId), name);
+  async addGroupMember(groupId, name) {
+    await redis.sadd(this.groupMembersKey(groupId), name);
   }
 
   /**
    * 現在のグループ分けでメンバーを移動する
-   * @param {string} date yyyy-mm-dd
    * @param {number} fromGroupId
    * @param {number} toGroupId
    * @param {string} name
    */
-  async moveGroupMember(date, fromGroupId, toGroupId, name) {
-    await redis.smove(this.groupMembersKey(date, fromGroupId), this.groupMembersKey(date, toGroupId), name);
+  async moveGroupMember(fromGroupId, toGroupId, name) {
+    await redis.smove(this.groupMembersKey(fromGroupId), this.groupMembersKey(toGroupId), name);
   }
 
   /**
    * メンバーをアクティブにする
-   * @param {string} date yyyy-mm-dd
    * @param {string} name 
    */
-  async setActive(date, name) {
-    await redis.srem(this.inactiveMembersKey(date), name);
+  async setActive(name) {
+    await redis.srem(this.inactiveMembersKey, name);
   }
 
   /**
    * メンバーを非アクティブにする
-   * @param {string} date yyyy-mm-dd
    * @param {string} name 
    */
-  async setInactive(date, name) {
-    await redis.sadd(this.inactiveMembersKey(date), name);
+  async setInactive(name) {
+    await redis.sadd(this.inactiveMembersKey, name);
   }
 }
 
