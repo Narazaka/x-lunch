@@ -16,6 +16,16 @@ window.addEventListener("DOMContentLoaded", () => {
     const dateNode = document.getElementById("date");
     const groupCountNode = document.getElementById("groupCount");
     const date = dateNode.value || state.currentDate;
+    const dateContent = date.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!dateContent) {
+      alert("日付が間違っています");
+      return;
+    }
+    const dateData = new Date(Number(dateContent[1]), Number(dateContent[2]) - 1, Number(dateContent[3]), 23, 59, 59);
+    if (new Date() > dateData) {
+      alert("日付が過去です");
+      return;
+    }
     const groupCount = groupCountNode.value || state.groupCount || 1;
     // 欠席者抽出
     const inactiveMembersHash = {}

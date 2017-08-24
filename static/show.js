@@ -115,7 +115,7 @@ function renderShuffleMode() {
     h("p", [h("button", { on: { click: toggleShuffleMode } }, "戻る")]),
     h("h2", "シャッフル"),
     h("p", `前回: ${state.currentDate || ""} →変更する`),
-    h("input", { attrs: { id: "date" }}),
+    h("input", { attrs: { id: "date", type: "date" }}),
     h("p", `前回: ${state.groupCount || 0} →変更する`),
     h("input", { attrs: { id: "groupCount", type: "number" }}),
     h("p", "あらかじめ欠席者を追加する"),
