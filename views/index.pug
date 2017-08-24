@@ -1,0 +1,14 @@
+extends layout
+block title
+  | ランチ
+block append script
+  script(src="/lib/base.js")
+  script(src="/lib/lunchIdAndNames.js")
+  script(src="/index.js")
+
+block body
+  h1 index
+  #app
+  form.newGroup(action="/", method="post")
+    input(name="name")
+    button(type="submit") ランチのくくりを作る

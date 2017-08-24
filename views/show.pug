@@ -1,0 +1,18 @@
+extends layout
+block title
+  | ランチ
+block append script
+  script
+    | const id =
+    = id
+    | ;
+  script(src="/lib/base.js")
+  script(src="/lib/lunchName.js")
+  script(src="/lib/lunchMembers.js")
+  script(src="/lib/lunchInactiveMembers.js")
+  script(src="/lib/lunchMembersOfGroups.js")
+  script(src="/show.js")
+
+block body
+  #app
+  a(href="/") 戻る
