@@ -6,10 +6,7 @@ window.addEventListener("DOMContentLoaded", () => {
     state.currentDate = currentDate;
     state.groupCount = groupCount;
     state.shuffled = shuffled;
-    if (!state.inactiveMembersInitialized) {
-      handler.initInactiveMembers();
-      state.inactiveMembersInitialized = true;
-    }
+    handler.initInactiveMembers();
     render();
   });
 
