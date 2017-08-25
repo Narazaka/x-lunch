@@ -74,8 +74,8 @@ function renderNormalMode() {
               ])
             ).concat([
               h("li", { class: { command: true }}, [
-                state.moveGroupMemberMode || state.editInactive ? "" : h("button", { on: { click: toggleAddGroupMember }, class: fa("plus") }),
-                state.showAddGroupMember ? h("span", [
+                state.moveGroupMemberMode || state.editInactive ? "" : h("button", { on: { click: () => toggleAddGroupMember(groupId) }, class: fa("plus") }),
+                state.showAddGroupMember === groupId ? h("span", [
                   h("input", { attrs: { id: `addGroupMember-${groupId}`, type: "text" }, on: { keypress: enterPress(() => handler.addGroupMember(groupId)) }}),
                   h("button", { on: { click: () => handler.addGroupMember(groupId) }, class: fa("check") }, "追加"),
                 ]) : "",
@@ -106,8 +106,12 @@ function toggleRemoveMembers() {
   render();
 }
 
-function toggleAddGroupMember() {
-  state.showAddGroupMember = !state.showAddGroupMember;
+function toggleAddGroupMember(groupId) {
+  if (state.showAddGroupMember == null || state.showAddGroupMember !== groupId) {
+    state.showAddGroupMember = groupId;
+  } else {
+    state.showAddGroupMember = undefined;
+  }
   state.moveGroupMemberMode = undefined;
   state.editInactive = false;
   render();
