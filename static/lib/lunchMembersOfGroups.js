@@ -16,6 +16,10 @@ window.addEventListener("DOMContentLoaded", () => {
     const dateNode = document.getElementById("date");
     const groupCountNode = document.getElementById("groupCount");
     const date = dateNode.value || state.currentDate;
+    if (!date) {
+      alert("日付が間違っています");
+      return;
+    }
     const dateContent = date.match(/^(\d{4})-(\d{2})-(\d{2})$/);
     if (!dateContent) {
       alert("日付が間違っています");
