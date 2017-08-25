@@ -1,6 +1,16 @@
 function render() {
-  const newVnode = state.shuffleMode ? renderShuffleMode() : renderNormalMode();
-  updateDom(newVnode);
+  if (state.shuffleMode) {
+    updateDom(renderShuffleMode());
+  } else if (state.memberMode) {
+    updateDom(renderMemberMode());
+  } else {
+    updateDom(renderNormalMode());
+  }
+}
+
+function toggleMemberMode() {
+  state.memberMode = !state.memberMode;
+  render();
 }
 
 function toggleShuffleMode() {
@@ -25,23 +35,8 @@ function renderLunchTitle() {
 function renderNormalMode() {
   return h("div", [
     renderLunchTitle(),
+    h("span", [h("button", { on: { click: toggleMemberMode } }, "メンバー")]),
     h("span", [h("button", { on: { click: toggleShuffleMode } }, "シャッフルする")]),
-    h("h2", [
-      h("span", "いつものメンバー"),
-      h("button", { on: { click: toggleAddMembers }, class: fa("plus") }),
-      h("button", { on: { click: toggleRemoveMembers }, class: fa("minus") }),
-    ]),
-    h("ul", { class: { members: true }}, (state.members || []).map(name =>
-      h("li", [
-        h("span", name),
-        state.showRemoveMembers ? h("button", { on: { click: () => handler.removeMember(name) }, class: fa("remove") }) : "",
-      ]),
-    )),
-    state.showAddMembers ? h("div", [
-      h("p", "1行に1人"),
-      h("textarea", { attrs: { id: "addMembers", rows: 10, cols: 20 }}),
-      h("p", [h("button", { on: { click: handler.addMembers }, class: fa("check") }, "追加")]),
-    ]) : "",
     h("h2", `グループ分け${state.currentDate ? ` (${state.currentDate.replace(/-/g, "/")})`: ""}`),
     h("button", { on: { click: toggleStartMoveGroupMemberMode }, class: fa("random") }, "メンバー移動"),
     h("button", { on: { click: toggleEditInactive }, class: fa("thumbs-up") }, "出欠変更"),
@@ -126,12 +121,36 @@ function toggleEditInactive() {
   render();
 }
 
+function renderMemberMode() {
+  return h("div", [
+    renderLunchTitle(),
+    h("span", [h("button", { on: { click: toggleMemberMode } }, "グループ分けへ")]),
+    h("h2", [
+      h("span", "いつものメンバー"),
+      h("button", { on: { click: toggleAddMembers }, class: fa("plus") }),
+      h("button", { on: { click: toggleRemoveMembers }, class: fa("minus") }),
+    ]),
+    h("ul", { class: { members: true }}, (state.members || []).map(name =>
+      h("li", [
+        h("span", name),
+        state.showRemoveMembers ? h("button", { on: { click: () => handler.removeMember(name) }, class: fa("remove") }) : "",
+      ]),
+    )),
+    state.showAddMembers ? h("div", [
+      h("p", "1行に1人"),
+      h("textarea", { attrs: { id: "addMembers", rows: 10, cols: 20 }}),
+      h("p", [h("button", { on: { click: handler.addMembers }, class: fa("check") }, "追加")]),
+    ]) : "",
+  ]);
+}
+
 function renderShuffleMode() {
   return h("div", [
     renderLunchTitle(),
     h("span", [h("button", { on: { click: toggleShuffleMode } }, "グループ分けへ")]),
     h("h2", "シャッフル"),
     h("p", [
+      h("span", "日程:"),
       state.currentDate ? h("span", `${state.currentDate.replace(/-/g, "/")} →変更?`) : "",
       h("input", { attrs: { id: "date", type: "date" }}),
     ]),
