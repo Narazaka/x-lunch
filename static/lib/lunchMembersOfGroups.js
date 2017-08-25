@@ -2,6 +2,10 @@ window.addEventListener("DOMContentLoaded", () => {
   const socket = io("/lunchMembersOfGroups");
 
   socket.on("result", ({membersOfGroups, currentDate, groupCount, shuffled}) => {
+    for (let i = membersOfGroups.length - 1; i >= 0; --i) {
+      if (membersOfGroups[i].length) break;
+      membersOfGroups.pop();
+    }
     state.membersOfGroups = membersOfGroups;
     state.currentDate = currentDate;
     state.groupCount = groupCount;
