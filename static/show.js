@@ -71,9 +71,12 @@ function dateFromTodayMessage(dateStr) {
   const [_, year, month, day] = dateStr.match(/^(\d+)-(\d+)-(\d+)$/);
   const date = new Date(year, month - 1, day, 0, 0, 0);
   const diff = date - now;
-  if (diff < 0) {
+  console.log(diff);
+  if (diff < -86400000) {
+    return "過去";
+  } else if (diff < 0) {
     return "今日";
-  } else if (diff < 86400) {
+  } else if (diff < 86400000) {
     return "明日";
   } else {
     return "次回";
