@@ -1,6 +1,6 @@
 extends layout
 block title
-  | ランチ
+  | シャッフルランチ - X-Lunch
 block append script
   script
     | const id =
@@ -14,5 +14,6 @@ block append script
   script(src="/show.js")
 
 block body
+  .logo X-Lunch
   #app
   a(href="/") 戻る

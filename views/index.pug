@@ -1,14 +1,14 @@
 extends layout
 block title
-  | ランチ
+  | X-Lunch
 block append script
   script(src="/lib/base.js")
   script(src="/lib/lunchIdAndNames.js")
   script(src="/index.js")
 
 block body
-  h1 index
+  h1.logo X-Lunch
   #app
   form.newGroup(action="/", method="post")
-    input(name="name")
-    button(type="submit") ランチのくくりを作る
+    input(name="name", type="text")
+    button.fa.fa-plus(type="submit") ランチのくくりを作る

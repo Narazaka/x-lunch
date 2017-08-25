@@ -2,6 +2,7 @@ html
   title
     block title
   block script
+    meta(name="viewport", content="width=device-width,initial-scale=1")
     script(src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.3/socket.io.slim.js")
     //
         script(src="https://cdnjs.cloudflare.com/ajax/libs/snabbdom/0.7.0/snabbdom.js")
@@ -14,5 +15,8 @@ html
     // script(src="https://cdnjs.cloudflare.com/ajax/libs/snabbdom/0.7.0/tovnode.js")
     script(src="https://cdnjs.cloudflare.com/ajax/libs/snabbdom/0.7.0/snabbdom-patch.js")
     script(src="/lib/snabbdom.js")
+  block style
+    link(rel="stylesheet", href="/layout.css")
+    link(rel="stylesheet", href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css")
 body
   block body

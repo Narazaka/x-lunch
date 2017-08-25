@@ -3,6 +3,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
   socket.on("result", (name) => {
     state.name = name;
+    document.title = `${name} - X-Lunch`;
     render();
   });
 
