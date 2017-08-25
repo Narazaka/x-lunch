@@ -49,7 +49,7 @@ function renderNormalMode() {
       h("p", [h("button", { on: { click: handler.addMembers }, class: fa("check") }, "追加")]),
     ]) : "",
     (!state.membersOfGroups || !state.membersOfGroups.length ? "" : h("div", [
-      h("h2", `グループ分け${state.currentDate ? ` (${state.currentDate.replace(/-/g, "/")})`: ""}`),
+      h("h2", `次回 ${state.currentDate.replace(/-/g, "/")} のグループ分け`),
       h("button", { on: { click: toggleStartMoveGroupMemberMode }, class: fa("random") }, "メンバー移動"),
       h("button", { on: { click: toggleEditInactive }, class: fa("thumbs-up") }, "出欠変更"),
       h("dl", (state.membersOfGroups || []).map((membersOfGroup, groupId) =>
