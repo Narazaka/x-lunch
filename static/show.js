@@ -88,6 +88,7 @@ function renderMembersOfGroups() {
     h("h2", `${dateFromTodayMessage(state.currentDate)} ${state.currentDate.replace(/-/g, "/")} のグループ分け`),
     h("button", { on: { click: toggleStartMoveGroupMemberMode }, class: fa("random") }, "メンバー移動"),
     h("button", { on: { click: toggleEditInactive }, class: fa("thumbs-up") }, "出欠変更"),
+    h("button", { on: { click: toggleShuffleMode }, class: fa("bolt") }, "再シャッフルする"),
     h("dl", (state.membersOfGroups || []).map((membersOfGroup, groupId) =>
       [
         h("dt", { class: { groupTitle: true } }, [
@@ -127,9 +128,9 @@ function renderMembersOfGroups() {
 function renderNormalMode() {
   return h("div", [
     renderLunchTitle(),
-    h("span", [h("button", { on: { click: toggleShuffleMode } }, "シャッフルする")]),
     renderMembersControl(),
     (!state.membersOfGroups || !state.membersOfGroups.length ? "" : renderMembersOfGroups()),
+    h("span", [h("button", { on: { click: toggleShuffleMode } }, "シャッフルランチを開催する")]),
   ]);
 }
 
@@ -169,7 +170,7 @@ function renderShuffleMode() {
   return h("div", [
     renderLunchTitle(),
     h("span", [h("button", { on: { click: toggleShuffleMode } }, "グループ分けへ")]),
-    h("h2", "シャッフル"),
+    h("h2", "シャッフルランチ開催"),
     h("p", [
       h("span", "日程:"),
       state.currentDate ? h("span", `${state.currentDate.replace(/-/g, "/")} →変更?`) : "",
