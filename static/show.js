@@ -68,24 +68,42 @@ function toggleRemoveMembers() {
 
 function dateFromTodayMessage(dateStr) {
   const now = new Date();
+  now.setHours(0);
+  now.setMinutes(0);
+  now.setSeconds(0);
+  now.setMilliseconds(0);
+  const [_, year, month, day] = dateStr.match(/^(\d+)-(\d+)-(\d+)$/);
+  const date = new Date(year, month - 1, day, 0, 0, 0, 0);
+  const diff = Math.round((date - now) / 86400000);
+  const wdiff = diff + now.getDay() - 7;
+  if (diff <= -1) {
+    return "過去";
+  } else if (diff === 0) {
+    return "今日";
+  } else if (diff === 1) {
+    return "明日";
+  } else if (diff === 2) {
+    return "明後日";
+  } else if (wdiff >= 14) {
+    return "次回";
+  } else if (wdiff >= 7) {
+    return "再来週";
+  } else if (wdiff >= 0) {
+    return "来週";
+  } else {
+    return "今週";
+  }
+}
+
+function weekMessage(dateStr) {
   const [_, year, month, day] = dateStr.match(/^(\d+)-(\d+)-(\d+)$/);
   const date = new Date(year, month - 1, day, 0, 0, 0);
-  const diff = date - now;
-  console.log(diff);
-  if (diff < -86400000) {
-    return "過去";
-  } else if (diff < 0) {
-    return "今日";
-  } else if (diff < 86400000) {
-    return "明日";
-  } else {
-    return "次回";
-  }
+  return ["日", "月", "火", "水", "木", "金", "土"][date.getDay()];
 }
 
 function renderMembersOfGroups() {
   return h("div", [
-    h("h2", `${dateFromTodayMessage(state.currentDate)} ${state.currentDate.replace(/-/g, "/")} のグループ分け`),
+    h("h2", `${dateFromTodayMessage(state.currentDate)} ${state.currentDate.replace(/-/g, "/")}(${weekMessage(state.currentDate)}) のグループ分け`),
     h("button", { on: { click: toggleStartMoveGroupMemberMode }, class: fa("random") }, "メンバー移動"),
     h("button", { on: { click: toggleEditInactive }, class: fa("thumbs-up") }, "出欠変更"),
     h("dl", (state.membersOfGroups || []).map((membersOfGroup, groupId) =>
