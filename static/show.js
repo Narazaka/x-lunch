@@ -201,7 +201,7 @@ function renderShuffleMode() {
         ])
       )
     ),
-    h("p", [h("button", { on: { click: handler.shuffle }, class: fa("bolt") }, "シャッフル！")]),
+    h("p", [h("button", { on: { click: handler.shuffle }, class: fa("bolt", { danger: true }) }, "シャッフル！")]),
   ]);
 }
 
