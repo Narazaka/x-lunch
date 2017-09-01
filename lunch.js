@@ -3,7 +3,7 @@ const Redis = require("ioredis");
 const redis = new Redis();
 
 // グループ個数取得を挟むとアトミックなコマンドではなくなるので固定長
-const GROUP_COUNT_MAX = 10;
+const GROUP_COUNT_MAX = 25;
 
 /** ランチのくくり */
 class Lunch {

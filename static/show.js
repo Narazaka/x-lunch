@@ -178,7 +178,7 @@ function renderShuffleMode() {
     h("p", [
       h("span", "グループ数:"),
       state.groupCount ? h("span", `${state.groupCount} →変更?`) : "",
-      h("input", { attrs: { id: "groupCount", type: "number" }}),
+      h("input", { attrs: { id: "groupCount", type: "number", min: 1, max: 25 }}),
     ]),
     h("p", "あらかじめ欠席者を追加する"),
     h("ul", { class: { members: true }},
