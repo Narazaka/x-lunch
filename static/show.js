@@ -101,44 +101,68 @@ function weekMessage(dateStr) {
   return ["日", "月", "火", "水", "木", "金", "土"][date.getDay()];
 }
 
+function dateTitle() {
+  return `${dateFromTodayMessage(state.currentDate)} ${state.currentDate.replace(/-/g, "/")}(${weekMessage(state.currentDate)}) のグループ分け`;
+}
+
 function renderMembersOfGroups() {
   return h("div", [
-    h("h2", `${dateFromTodayMessage(state.currentDate)} ${state.currentDate.replace(/-/g, "/")}(${weekMessage(state.currentDate)}) のグループ分け`),
+    h("h2", dateTitle()),
     h("button", { on: { click: toggleStartMoveGroupMemberMode }, class: fa("random") }, "メンバー移動"),
     h("button", { on: { click: toggleEditInactive }, class: fa("thumbs-up") }, "出欠変更"),
-    h("dl", (state.membersOfGroups || []).map((membersOfGroup, groupId) =>
-      [
-        h("dt", { class: { groupTitle: true } }, [
-          h("span", `グループ${groupId + 1}`),
-        ]),
-        h("dd", { class: { groupMembers: true }}, [
-          h("ul", { class: { members: true }}, membersOfGroup.map(name =>
-            h("li", { class: { inactive: (state.inactiveMembers || {})[name], moving: state.moveGroupMemberMode && state.moveGroupMember === name } }, [
-              h("span", name),
-              {
-                default: "",
-                from: h("button", { on: { click: () => setMoveGroupMember(name) }}, "ここから"),
-                to: "", // state.moveGroupMember === name ? h("span", "ここから") : "",
-              }[state.moveGroupMemberMode || "default"],
-              state.editInactive ? (
-                (state.inactiveMembers || {})[name] ?
-                  h("button", { on: { click: () => handler.setActive(name) }}, "出席する") :
-                  h("button", { on: { click: () => handler.setInactive(name) }}, "欠席する")
-              ) : "",
-            ])
-          ).concat([
-            h("li", { class: { command: true }}, [
-              state.moveGroupMemberMode || state.editInactive ? "" : h("button", { on: { click: () => toggleAddGroupMember(groupId) }, class: fa("plus") }),
-              state.showAddGroupMember === groupId ? h("span", [
-                h("input", { attrs: { id: `addGroupMember-${groupId}`, type: "text" }, on: { keypress: enterPress(() => handler.addGroupMember(groupId)) }}),
-                h("button", { on: { click: () => handler.addGroupMember(groupId) }, class: fa("check") }, "追加"),
-              ]) : "",
-              state.moveGroupMemberMode === "to" ? h("button", { on: { click: () => handler.moveGroupMember(groupId) }}, "ここへ") : "",
-            ])
-          ]))
+    h("button", { on: { click: toggleMemberOfGroupsUIMode }, class: fa("clipboard") }, "ChatWork貼り付け用"),
+    state.memberOfGroupsUIMode === "chatwork" ?
+    renderMembersOfGroupsChatworkUI() :
+    renderMembersOfGroupsNormalUI(),
+  ]);
+}
+
+function renderMembersOfGroupsNormalUI() {
+  return h("dl", (state.membersOfGroups || []).map((membersOfGroup, groupId) => [
+    h("dt", { class: { groupTitle: true } }, [
+      h("span", `グループ${groupId + 1}`),
+    ]),
+    h("dd", { class: { groupMembers: true }}, [
+      h("ul", { class: { members: true }}, membersOfGroup.map(name =>
+        h("li", { class: { inactive: (state.inactiveMembers || {})[name], moving: state.moveGroupMemberMode && state.moveGroupMember === name } }, [
+          h("span", name),
+          {
+            default: "",
+            from: h("button", { on: { click: () => setMoveGroupMember(name) }}, "ここから"),
+            to: "", // state.moveGroupMember === name ? h("span", "ここから") : "",
+          }[state.moveGroupMemberMode || "default"],
+          state.editInactive ? (
+            (state.inactiveMembers || {})[name] ?
+              h("button", { on: { click: () => handler.setActive(name) }}, "出席する") :
+              h("button", { on: { click: () => handler.setInactive(name) }}, "欠席する")
+          ) : "",
         ])
-      ]
-    ).reduce((all, part) => all.concat(part), [])),
+      ).concat([
+        h("li", { class: { command: true }}, [
+          state.moveGroupMemberMode || state.editInactive ? "" : h("button", { on: { click: () => toggleAddGroupMember(groupId) }, class: fa("plus") }),
+          state.showAddGroupMember === groupId ? h("span", [
+            h("input", { attrs: { id: `addGroupMember-${groupId}`, type: "text" }, on: { keypress: enterPress(() => handler.addGroupMember(groupId)) }}),
+            h("button", { on: { click: () => handler.addGroupMember(groupId) }, class: fa("check") }, "追加"),
+          ]) : "",
+          state.moveGroupMemberMode === "to" ? h("button", { on: { click: () => handler.moveGroupMember(groupId) }}, "ここへ") : "",
+        ])
+      ]))
+    ])
+  ]).reduce((all, part) => all.concat(part), []));
+}
+
+function renderMembersOfGroupsChatworkUI() {
+  return h("div", [
+    h("textarea", { attrs: { readonly: true, cols: 50, rows: 15 }},
+      `[info][title]${dateTitle()}[/title]` +
+      (state.membersOfGroups || []).map((membersOfGroup, groupId) => [
+        `グループ${groupId + 1}: ` + membersOfGroup.map(name =>
+          (state.inactiveMembers || {})[name] ?
+          `×${name}`:
+          `○${name}`,
+        ).join(", "),
+      ]).join("\n") + "[/info]",
+    ),
   ]);
 }
 
@@ -167,6 +191,11 @@ function toggleStartMoveGroupMemberMode() {
   state.moveGroupMember = undefined;
   state.showAddGroupMember = false;
   state.editInactive = false;
+  render();
+}
+
+function toggleMemberOfGroupsUIMode() {
+  state.memberOfGroupsUIMode = state.memberOfGroupsUIMode ? undefined : "chatwork";
   render();
 }
 
