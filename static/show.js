@@ -101,16 +101,23 @@ function weekMessage(dateStr) {
   return ["日", "月", "火", "水", "木", "金", "土"][date.getDay()];
 }
 
+function dateTitle() {
+  return `${dateFromTodayMessage(state.currentDate)} ${state.currentDate.replace(/-/g, "/")}(${weekMessage(state.currentDate)}) のグループ分け`;
+}
+
 function renderMembersOfGroups() {
   return h("div", [
-    h("h2", `${dateFromTodayMessage(state.currentDate)} ${state.currentDate.replace(/-/g, "/")}(${weekMessage(state.currentDate)}) のグループ分け`),
+    h("h2", dateTitle()),
     h("button", { on: { click: toggleStartMoveGroupMemberMode }, class: fa("random") }, "メンバー移動"),
     h("button", { on: { click: toggleEditInactive }, class: fa("thumbs-up") }, "出欠変更"),
-    renderMembersOfGroupsUI(),
+    h("button", { on: { click: toggleMemberOfGroupsUIMode }, class: fa("clipboard") }, "ChatWork貼り付け用"),
+    state.memberOfGroupsUIMode === "chatwork" ?
+    renderMembersOfGroupsChatworkUI() :
+    renderMembersOfGroupsNormalUI(),
   ]);
 }
 
-function renderMembersOfGroupsUI() {
+function renderMembersOfGroupsNormalUI() {
   return h("dl", (state.membersOfGroups || []).map((membersOfGroup, groupId) => [
     h("dt", { class: { groupTitle: true } }, [
       h("span", `グループ${groupId + 1}`),
@@ -144,6 +151,21 @@ function renderMembersOfGroupsUI() {
   ]).reduce((all, part) => all.concat(part), []));
 }
 
+function renderMembersOfGroupsChatworkUI() {
+  return h("div", [
+    h("textarea", { attrs: { readonly: true, cols: 50, rows: 15 }},
+      `[info][title]${dateTitle()}[/title]` +
+      (state.membersOfGroups || []).map((membersOfGroup, groupId) => [
+        `グループ${groupId + 1}: ` + membersOfGroup.map(name =>
+          (state.inactiveMembers || {})[name] ?
+          `×${name}`:
+          `○${name}`,
+        ).join(", "),
+      ]).join("\n") + "[/info]",
+    ),
+  ]);
+}
+
 function renderNormalMode() {
   return h("div", [
     renderLunchTitle(),
@@ -169,6 +191,11 @@ function toggleStartMoveGroupMemberMode() {
   state.moveGroupMember = undefined;
   state.showAddGroupMember = false;
   state.editInactive = false;
+  render();
+}
+
+function toggleMemberOfGroupsUIMode() {
+  state.memberOfGroupsUIMode = state.memberOfGroupsUIMode ? undefined : "chatwork";
   render();
 }
 
