@@ -94,7 +94,8 @@ h2 {
 }
 
 .members li.inactive {
-    text-decoration: line-through;
+    background-color: #aaa;
+    color: #eee;
 }
 
 .members li.moving {
