@@ -13,13 +13,14 @@ function toggleShuffleMode() {
 
 function renderLunchTitle() {
   return h("h1", { class: { lunchName: true }}, [
+    h("span", {}, state.name),
     (
       state.showSetName ?
       h("span", [
+        "→",
         h("input", { attrs: { id: "name", type: "text" }, on: { keypress: enterPress(handler.setName) } }),
         h("button", { on: { click: handler.setName }, class: fa("check") }),
-      ]) :
-      h("span", {}, state.name)
+      ]) : ""
     ),
     h("button", { on: { click: toggleSetName }, class: fa("edit") }),
   ]);
