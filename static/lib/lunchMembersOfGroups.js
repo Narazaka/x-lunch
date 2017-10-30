@@ -36,20 +36,23 @@ window.addEventListener("DOMContentLoaded", () => {
     }
     const groupCount = groupCountNode.value || state.groupCount || 1;
     // 欠席者抽出
-    const inactiveMembersHash = {}
-    for (const name of Object.keys(state.inactiveMembers || {}).concat(Object.keys(state.additionalInactiveMembers || {}))) {
-      inactiveMembersHash[name] = true;
+    const nextInactiveMembersHash = {};
+    const nextMemberAttendance = state.nextMemberAttendance || {};
+    const inactiveMembers = state.inactivateNextMembersAsCurrent && state.inactiveMembers ? state.inactiveMembers : {};
+    for (const name of Object.keys(nextMemberAttendance)) {
+      if (nextMemberAttendance[name] === false) nextInactiveMembersHash[name] = true;
     }
-    for (const name of Object.keys(state.additionalActiveMembers || {})) {
-      delete inactiveMembersHash[name];
+    for (const name of Object.keys(inactiveMembers)) {
+      if (nextMemberAttendance[name] !== true) nextInactiveMembersHash[name] = true;
     }
-    const inactiveMembers = Object.keys(inactiveMembersHash);
-    state.additionalInactiveMembers = undefined;
+    delete state.nextMemberAttendance;
+    delete state.inactivateNextMembersAsCurrent;
+    const nextInactiveMembers = Object.keys(nextInactiveMembersHash);
     state.shuffleMode = false;
     render();
-    socket.emit("shuffle", { date, groupCount, inactiveMembers });
+    socket.emit("shuffle", { date, groupCount, inactiveMembers: nextInactiveMembers });
   };
-  
+
   handler.addGroupMember = function(groupId) {
     const node = document.getElementById(`addGroupMember-${groupId}`);
     const name = node.value;
@@ -59,7 +62,7 @@ window.addEventListener("DOMContentLoaded", () => {
     render();
     socket.emit("add", { date: state.currentDate, groupId, name });
   };
-  
+
   handler.moveGroupMember = function(toGroupId) {
     const name = state.moveGroupMember;
     let fromGroupId;

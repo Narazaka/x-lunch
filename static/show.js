@@ -227,23 +227,24 @@ function renderShuffleMode() {
       state.groupCount ? h("span", `${state.groupCount} →変更?`) : "",
       h("input", { attrs: { id: "groupCount", type: "number", min: 1, max: 25 }}),
     ]),
-    h("p", "あらかじめ欠席者を追加する"),
+    h("p", [
+      "あらかじめ欠席者を追加する",
+      h("button", { on: { click: () => activateAllNextMembers() }, class: fa("refresh") }, "すべてのメンバーを出席にする"),
+      h(
+        "button",
+        {
+          on: { click: () => toggleInactivateNextMembersAsCurrent() },
+          class: fa(state.inactivateNextMembersAsCurrent ? "check-square-o" : "square-o"),
+        },
+        "今回欠席者を次回も欠席にする"
+      ),
+    ]),
     h("ul", { class: { members: true }},
       (state.members || []).map(name =>
         h("li", { class: { inactive: !isActive(name) }}, [
           h("span", name),
           h("div",
-            (state.inactiveMembers || {})[name] ?
-              (
-                (state.additionalActiveMembers || {})[name] ?
-                  h("button", { on: { click: () => toggleAdditionalActiveMember(name) } }, "欠席にする") :
-                  h("button", { on: { click: () => toggleAdditionalActiveMember(name) } }, "出席にする")
-              ) :
-              (
-                (state.additionalInactiveMembers || {})[name] ?
-                  h("button", { on: { click: () => toggleAdditionalInactiveMember(name) } }, "出席にする") :
-                  h("button", { on: { click: () => toggleAdditionalInactiveMember(name) } }, "欠席にする")
-              )
+            h("button", { on: { click: () => toggleNextMemberAttendance(name) } }, `${isActive(name) ? "欠席" : "出席"}にする`),
           )
         ])
       )
@@ -252,28 +253,41 @@ function renderShuffleMode() {
   ]);
 }
 
-function isActive(name) {
-  if ((state.additionalActiveMembers || {})[name]) return true;
-  if ((state.additionalInactiveMembers || {})[name]) return false;
-  return !(state.inactiveMembers || {})[name];
-}
-
-function toggleAdditionalActiveMember(name) {
-  if (!state.additionalActiveMembers) state.additionalActiveMembers = {};
-  if (state.additionalActiveMembers[name]) {
-    delete state.additionalActiveMembers[name];
-  } else {
-    state.additionalActiveMembers[name] = true;
-  }
+function activateAllNextMembers() {
+  delete state.nextMemberAttendance;
+  delete state.inactivateNextMembersAsCurrent;
   render();
 }
 
-function toggleAdditionalInactiveMember(name) {
-  if (!state.additionalInactiveMembers) state.additionalInactiveMembers = {};
-  if (state.additionalInactiveMembers[name]) {
-    delete state.additionalInactiveMembers[name];
+function toggleInactivateNextMembersAsCurrent() {
+  state.inactivateNextMembersAsCurrent = !state.inactivateNextMembersAsCurrent;
+  render();
+}
+
+function isActive(name) {
+  const nextMemberAttendance = state.nextMemberAttendance || {};
+  if (nextMemberAttendance[name] === true) return true;
+  if (nextMemberAttendance[name] === false) return false;
+  const inactiveMembers = state.inactivateNextMembersAsCurrent && state.inactiveMembers ? state.inactiveMembers : {};
+  return !inactiveMembers[name];
+}
+
+function toggleNextMemberAttendance(name) {
+  if (!state.nextMemberAttendance) state.nextMemberAttendance = {};
+  if (state.inactivateNextMembersAsCurrent && state.inactiveMembers[name]) {
+    if (state.nextMemberAttendance[name]) { // 明示的に出席とされている場合
+      delete state.nextMemberAttendance[name]; // 明示的な指定を消す
+    } else { // 明示的な欠席とされているあるいは明示的な指定がない場合
+      state.nextMemberAttendance[name] = true; // 明示的な出席を付ける
+    }
   } else {
-    state.additionalInactiveMembers[name] = true;
+    if (state.nextMemberAttendance[name] === true) { // 明示的に出席とされている場合
+      state.nextMemberAttendance[name] = false; // 明示的な欠席をつける
+    } else if (state.nextMemberAttendance[name] === false) { // 明示的な欠席とされている場合
+      delete state.nextMemberAttendance[name]; // 明示的な指定を消す
+    } else { // 明示的な指定がない場合
+      state.nextMemberAttendance[name] = false; // 明示的な欠席をつける
+    }
   }
   render();
 }
