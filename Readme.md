@@ -18,7 +18,9 @@ node index.js
 
 ## デプロイ
 
-scpで配置して、screen立ち上げて、node index.jsしているだけ。
+scpで配置して、screen立ち上げて、node index.jsしているだけだけどまあ動く。
+
+Wikiに詳細があるかもしれない。
 
 ## License
 
