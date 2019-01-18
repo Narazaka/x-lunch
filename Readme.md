@@ -16,6 +16,10 @@ yarn install
 node index.js
 ```
 
+## デプロイ
+
+scpで配置して、screen立ち上げて、node index.jsしているだけ。
+
 ## License
 
 This is released under [MIT License](http://narazaka.net/license/MIT?2017).
